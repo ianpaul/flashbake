@@ -19,7 +19,7 @@ class FileOwners(AbstractMessagePlugin):
         ''' Add owners and groups data for the files and folders in the current directory. '''
         fields = self.__getowners(self.owners)
         for i in range(len(fields)):
-            message_file.write("{0} {1} {2}\n".format(fields[i][2], fields[i][3], fields[i][8]))
+            message_file.write("{0} {1} {2} {3} {4}\n".format(fields[i][2], fields[i][3], fields[i][5], fields[i][6], fields[i][7]))
         
         ''' Add a list of the git repostitory's ignored but present files. '''
         if self.ignored == None:
@@ -29,7 +29,7 @@ class FileOwners(AbstractMessagePlugin):
             message_file.write(t)
 
     def __getowners(self, owners):
-        check = subprocess.run(["ls", "-lA", owners], capture_output=True, text=True).stdout.strip("\n")
+        check = subprocess.run(["ls", "-lAt", "--time-style=long-iso", owners], capture_output=True, text=True).stdout.strip("\n")
         fields = []
         for line in check.splitlines()[1:]:
             x = line.split()
