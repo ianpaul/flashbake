@@ -1,14 +1,31 @@
-''' project status was inspired by @xtaran on GitHub. It includes a number of options to add the current state of your project directory to the commit message. '''
+#    Copyright 2022 Ian Paul
+#    Copyright 2009 Thomas Gideon
+#
+#    This file is part of flashbake.
+#
+#    flashbake is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    flashbake is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
+
+''' project status was inspired by @xtaran on GitHub. It adds information about the current state of the project directory to the commit message. '''
 
 from flashbake.plugins import AbstractMessagePlugin
 import subprocess
-import os.path
 
 class FileOwners(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, False)
-        self.define_property('owners', required=False)
-        self.define_property('ignored', required=False)
+        self.define_property('owners', required=False) '''Adds owner, group, and last modified time stamp to the commit message for each file in the specified directory.'''
+        self.define_property('ignored', required=False) '''This option adds to the commit message a list of all present but ignored files in the specified directory.'''
 
     def addcontext(self, message_file, config):
         ''' If the owners variable is not present in the config. Write an error message to the config. '''
