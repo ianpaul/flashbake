@@ -101,9 +101,13 @@ class ScrivenerFile(AbstractFilePlugin):
     def __init__(self, plugin_spec):
         AbstractFilePlugin.__init__(self, plugin_spec)
         self.share_property('scrivener_projects')
+        self.share_property('scrivener_project_dir')
 
     def pre_process(self, hot_files, config):
         """Add all Scrivener project files to monitoring."""
+        # Store project directory for later use in ScrivenerWordCount
+        config.scrivener_project_dir = hot_files.project_dir
+        
         for project in find_scrivener_projects(hot_files, config):
             logging.debug(f"ScrivenerFile: adding project '{project}'")
             
@@ -124,6 +128,7 @@ class ScrivenerWordCount(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, False)
         self.share_property('scrivener_projects')
+        self.share_property('scrivener_project_dir')
 
     def addcontext(self, message_file, config):
         """Add word count information to commit message."""
@@ -133,7 +138,7 @@ class ScrivenerWordCount(AbstractMessagePlugin):
                 return True
             
             for project_name in projects:
-                project_path = Path(config.hot_files.project_dir) / project_name
+                project_path = Path(config.scrivener_project_dir) / project_name
                 
                 # Try to get word count from Scrivener's project file
                 word_counts = self._get_word_counts_from_project(project_path)
