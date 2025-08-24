@@ -29,6 +29,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -244,15 +245,18 @@ class ScrivenerWordCount(AbstractMessagePlugin):
 
     def _calculate_word_count_changes(self, project_path, current_counts):
         """Calculate changes in word count since last commit."""
-        cache_path = get_wordcount_cache_path(project_path)
-        
         try:
-            # Load previous counts
-            if cache_path.exists():
-                with open(cache_path, 'r') as f:
-                    previous_counts = json.load(f)
-            else:
-                previous_counts = {}
+            # Try to get previous counts from git history first
+            previous_counts = self._get_previous_counts_from_git(project_path)
+            
+            # Fall back to cache file if git history unavailable
+            if not previous_counts:
+                cache_path = get_wordcount_cache_path(project_path)
+                if cache_path.exists():
+                    with open(cache_path, 'r') as f:
+                        previous_counts = json.load(f)
+                else:
+                    previous_counts = {}
             
             # Calculate changes
             changes = {}
@@ -260,12 +264,87 @@ class ScrivenerWordCount(AbstractMessagePlugin):
                 previous = previous_counts.get(section, 0)
                 changes[section] = current - previous
             
-            # Save current counts for next time
-            with open(cache_path, 'w') as f:
-                json.dump(current_counts, f)
+            # Update cache file for performance on next run
+            cache_path = get_wordcount_cache_path(project_path)
+            try:
+                with open(cache_path, 'w') as f:
+                    json.dump(current_counts, f)
+            except OSError:
+                pass  # Cache update is optional
             
             return changes
             
-        except (OSError, json.JSONDecodeError) as e:
-            logging.debug(f"Error handling word count cache: {e}")
+        except Exception as e:
+            logging.debug(f"Error calculating word count changes: {e}")
             return {}
+
+    def _get_previous_counts_from_git(self, project_path):
+        """Reconstruct previous word counts from the last commit."""
+        try:
+            # Get the project directory and project name
+            project_dir = project_path.parent
+            project_name = project_path.name
+            
+            # Check if we're in a git repository
+            result = subprocess.run(['git', 'rev-parse', '--git-dir'], 
+                                  cwd=project_dir, 
+                                  capture_output=True, 
+                                  text=True)
+            if result.returncode != 0:
+                logging.debug("Not in a git repository")
+                return {}
+            
+            # Get the last commit hash
+            result = subprocess.run(['git', 'rev-parse', 'HEAD'], 
+                                  cwd=project_dir, 
+                                  capture_output=True, 
+                                  text=True)
+            if result.returncode != 0:
+                logging.debug("No commits found")
+                return {}
+            
+            last_commit = result.stdout.strip()
+            
+            # Check if the Scrivener project existed in the last commit
+            result = subprocess.run(['git', 'ls-tree', '-r', '--name-only', last_commit], 
+                                  cwd=project_dir, 
+                                  capture_output=True, 
+                                  text=True)
+            if result.returncode != 0:
+                return {}
+            
+            # Look for the project in the file list
+            files_in_commit = result.stdout.strip().split('\n')
+            project_files = [f for f in files_in_commit if f.startswith(project_name + '/')]
+            
+            if not project_files:
+                logging.debug(f"Project {project_name} not found in last commit")
+                return {}
+            
+            # Create a temporary directory to check out the previous version
+            import tempfile
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_project_path = Path(temp_dir) / project_name
+                
+                # Extract the project at the last commit
+                result = subprocess.run(['git', 'archive', last_commit, project_name], 
+                                      cwd=project_dir, 
+                                      stdout=subprocess.PIPE)
+                if result.returncode != 0:
+                    return {}
+                
+                # Extract the archive
+                extract_result = subprocess.run(['tar', '-x'], 
+                                              input=result.stdout, 
+                                              cwd=temp_dir)
+                if extract_result.returncode != 0:
+                    return {}
+                
+                # Calculate word counts from the previous version
+                if temp_project_path.exists():
+                    return self._get_word_counts_from_project(temp_project_path)
+                
+        except Exception as e:
+            logging.debug(f"Error reconstructing word counts from git: {e}")
+            
+        return {}
