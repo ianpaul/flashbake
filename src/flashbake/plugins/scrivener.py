@@ -175,10 +175,29 @@ class ScrivenerWordCount(AbstractMessagePlugin):
             return False
 
     def _get_word_counts_from_project(self, project_path):
-        """Extract word counts from Scrivener project XML."""
+        """Extract word counts from Scrivener project with validation."""
         if not project_path.exists():
             return None
         
+        # Get both XML and manual counts for comparison
+        xml_counts = self._get_word_counts_from_xml(project_path)
+        manual_counts = self._calculate_word_counts_manually(project_path)
+        
+        # Use manual if XML is clearly wrong
+        if xml_counts and manual_counts:
+            xml_draft = xml_counts.get('draft', 0)
+            manual_draft = manual_counts.get('draft', 0)
+            
+            # If XML is negative or differs significantly, use manual
+            if xml_draft < 0 or abs(xml_draft - manual_draft) > max(10, manual_draft * 0.5):
+                logging.warning(f"Scrivener XML word count ({xml_draft}) seems unreliable, using manual count ({manual_draft})")
+                return manual_counts
+        
+        # Return XML counts if they seem reasonable, otherwise manual
+        return xml_counts or manual_counts
+
+    def _get_word_counts_from_xml(self, project_path):
+        """Extract word counts from Scrivener project XML."""
         # Look for the main project file
         scrivx_files = list(project_path.glob("*.scrivx"))
         if not scrivx_files:
@@ -202,15 +221,11 @@ class ScrivenerWordCount(AbstractMessagePlugin):
                 elif element.tag == 'OtherWordCount' and element.text:
                     word_counts['notes'] = int(element.text)
             
-            # If we didn't find XML word counts, calculate manually
-            if not word_counts:
-                word_counts = self._calculate_word_counts_manually(project_path)
-            
-            return word_counts
+            return word_counts if word_counts else None
             
         except (ET.ParseError, ValueError, OSError) as e:
             logging.debug(f"Error parsing {scrivx_file}: {e}")
-            return self._calculate_word_counts_manually(project_path)
+            return None
 
     def _calculate_word_counts_manually(self, project_path):
         """Manually calculate word counts by parsing RTF files."""
