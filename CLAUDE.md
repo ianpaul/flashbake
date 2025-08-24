@@ -38,14 +38,23 @@ src/flashbake/
 
 ## Known Issues & Fixes
 - **Scrivener Plugin**: Message plugins don't receive `hot_files` parameter, only `config`. Fixed by using shared property mechanism to pass `project_dir` between file and message plugins.
+- **Scrivener Word Count**: Legacy Scrivener projects can have stale XML word count caches that don't reflect actual RTF content. Fixed by implementing hybrid validation that compares XML vs manual RTF parsing, with automatic fallback when XML seems unreliable.
 - **Installation Warnings**: `setup.py install` is deprecated (deadline Oct 2025). Modern alternative: `pip install .`
 - **Regex Warnings**: Invalid escape sequences in commit.py and __init__.py need fixing (e.g., `\s` → `\\s`)
 
 ## Testing Notes
 - Always test plugin changes on multiple platforms - WSL vs macOS can behave differently
 - Use `git status` before commits to avoid contaminating repo with build artifacts (egg-info, etc.)
+- Test Scrivener plugin with both fresh projects (accurate XML) and legacy projects (potentially stale XML)
+
+## Installation Troubleshooting
+- **Setuptools caching**: If plugin changes don't take effect after reinstall, clean build artifacts: `rm -rf build/ dist/ src/flashbake.egg-info/` then reinstall
+- **Multiple install locations**: Check install location with `python3 -c "import flashbake.plugins.scrivener; print(flashbake.plugins.scrivener.__file__)"` 
+- **User vs system install**: May need to `pip3 uninstall flashbake` before `sudo python3 setup.py install` to avoid conflicts
 
 ## Recent Work
 - Added Scrivener plugin integration for tracking Scrivener project metadata
 - Working on `scrivener_remake` branch for testing on multiple machines
 - Fixed `hot_files` access error in scrivener plugin (worked on WSL, failed on macOS)
+- Implemented hybrid word count validation for Scrivener plugin to handle legacy projects with stale XML caches
+- Enhanced git-based word count change tracking with proper error handling and fallback mechanisms
