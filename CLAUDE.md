@@ -36,6 +36,16 @@ src/flashbake/
 - Test: `python -m pytest test/` (check for test runner first)
 - Entry points: `flashbake` and `flashbakeall` console commands
 
+## Known Issues & Fixes
+- **Scrivener Plugin**: Message plugins don't receive `hot_files` parameter, only `config`. Fixed by using shared property mechanism to pass `project_dir` between file and message plugins.
+- **Installation Warnings**: `setup.py install` is deprecated (deadline Oct 2025). Modern alternative: `pip install .`
+- **Regex Warnings**: Invalid escape sequences in commit.py and __init__.py need fixing (e.g., `\s` → `\\s`)
+
+## Testing Notes
+- Always test plugin changes on multiple platforms - WSL vs macOS can behave differently
+- Use `git status` before commits to avoid contaminating repo with build artifacts (egg-info, etc.)
+
 ## Recent Work
 - Added Scrivener plugin integration for tracking Scrivener project metadata
 - Working on `scrivener_remake` branch for testing on multiple machines
+- Fixed `hot_files` access error in scrivener plugin (worked on WSL, failed on macOS)

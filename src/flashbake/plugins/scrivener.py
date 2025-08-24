@@ -106,7 +106,7 @@ class ScrivenerFile(AbstractFilePlugin):
 
     def pre_process(self, hot_files, config):
         """Add all Scrivener project files to monitoring."""
-        # Store project directory for later use in ScrivenerWordCount
+        # Store project directory for use by message plugin
         config.scrivener_project_dir = hot_files.project_dir
         
         for project in find_scrivener_projects(hot_files, config):
@@ -137,6 +137,11 @@ class ScrivenerWordCount(AbstractMessagePlugin):
             projects = find_scrivener_projects(None, config)  # Use cached projects
             if not projects:
                 return True
+            
+            # Get project directory from shared property
+            if not hasattr(config, 'scrivener_project_dir') or config.scrivener_project_dir is None:
+                logging.warning("Scrivener project directory not available")
+                return False
             
             for project_name in projects:
                 project_path = Path(config.scrivener_project_dir) / project_name
