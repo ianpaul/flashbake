@@ -18,7 +18,8 @@
 '''  __init__.py - Shared classes and functions for the flashbake package.'''
 
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
-from flashbake.compat import relpath, next_, iglob
+from os.path import relpath
+from glob import iglob
 from types import *
 import subprocess
 import flashbake.plugins #@UnresolvedImport
@@ -28,7 +29,6 @@ import os
 import os.path
 import re
 import sys #@Reimport
-import builtins
 
 __version__ = '0.30.0'
 
@@ -283,8 +283,8 @@ class HotFiles:
         
         pattern = re.compile('(\[.+\]|\*|\?)')
         if pattern.search(filename):
-            glob_re = re.sub('\*', '.*', filename)
-            glob_re = re.sub('\?', '.', glob_re)
+            glob_re = re.sub(r'\*', '.*', filename)
+            glob_re = re.sub(r'\?', '.', glob_re)
             self.globs[filename] = glob_re
 
         for expanded_file in iglob(to_expand):
@@ -350,9 +350,9 @@ class HotFiles:
             actual files that match their globs. """
         def __match(file_tuple):
             return re.match(file_tuple[1], filename) != None
-        matches = filter(__match, self.globs.iteritems())
+        matches = filter(__match, self.globs.items())
         matches = dict(matches)
-        return matches.keys()
+        return list(matches.keys())
 
     def warnproblems(self):
         # print warnings for linked files
@@ -424,7 +424,7 @@ def find_executable(executable):
                     os.getenv('PATH').split(os.pathsep))
     paths = (ex_path for ex_path in ex_paths \
                  if os.path.exists(ex_path))
-    return next_(paths, None)
+    return next(paths, None)
 
 def executable_available(executable):
     return find_executable(executable) != None

@@ -24,7 +24,7 @@ mail.py - plug-in to send notices via smtp.
 '''
 
 from flashbake import plugins
-from flashbake.compat import MIMEText
+from email.mime.text import MIMEText
 import logging
 import os
 import smtplib
@@ -66,7 +66,7 @@ class Email(plugins.AbstractNotifyPlugin):
         if len(hot_files.linked_files) > 0:
             body += '\nThe following files in .flashbake are links or have a link in their directory path.\n\n'
 
-            for (file, link) in hot_files.linked_files.iteritems():
+            for (file, link) in hot_files.linked_files.items():
                 if file == link:
                     body += '\t' + file + ' is a link\n'
                 else:

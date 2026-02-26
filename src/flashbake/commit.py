@@ -27,7 +27,7 @@ import sys
 
 
 
-DELETED_RE = re.compile('#\s*deleted:.*')
+DELETED_RE = re.compile(r'#\s*deleted:.*')
 # takes the following regular expression pattern and turns it into a 
 # regular expression object. This is used to identify deleted files.
 
@@ -47,7 +47,7 @@ def commit(control_config, hot_files, quiet_mins):
     # in particular find the existing entries that need a commit
     # this command is used in `to_commit` on files returned from 
     # `def status` in git.py.
-    pending_re = re.compile("\s*(renamed|copied|modified|new file):.*")
+    pending_re = re.compile(r"\s*(renamed|copied|modified|new file):.*")
 
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
@@ -113,7 +113,7 @@ def commit(control_config, hot_files, quiet_mins):
         # use a regex to match so we can enforce whole word rather than
         # substring matchs, otherwise 'foo.txt~' causes a false report of an
         # error
-        control_re = re.compile('\<' + re.escape(control_file) + '\>')
+        control_re = re.compile(r'\<' + re.escape(control_file) + r'\>')
         if control_re.search(status_output) == None:
             logging.debug(f'{control_file} has no uncommitted changes.')
         # if anything hits this block, we need to figure out why
