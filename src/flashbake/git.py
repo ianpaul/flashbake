@@ -21,6 +21,7 @@ needed.'''
 import logging
 import os
 import subprocess
+import sys
 
 
 
@@ -48,7 +49,8 @@ class Git:
                 git_exists = True
         else:
             for path_token in path_tokens:
-                if os.path.exists(os.path.join(path_token, 'git')):
+                if (os.path.exists(os.path.join(path_token, 'git'))
+                        or os.path.exists(os.path.join(path_token, 'git.exe'))):
                     git_exists = True
         # fail much sooner and more quickly then if git calls are made later,
         # naively assuming it is available

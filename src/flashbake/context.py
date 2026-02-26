@@ -17,8 +17,9 @@
 
 '''  context.py - Build up some descriptive context for automatic commit to git'''
 
+import os
 import os.path
-import random
+import tempfile
 import logging
 
 
@@ -28,11 +29,8 @@ def buildmessagefile(config):
         return a reference to the resulting file. """
     config.init()
 
-    msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
-
-    # try to avoid clobbering another process running this script
-    while os.path.exists(msg_filename):
-        msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
+    fd, msg_filename = tempfile.mkstemp(prefix='git_msg_', suffix='.txt')
+    os.close(fd)
 
     connectable = False
     connected = False

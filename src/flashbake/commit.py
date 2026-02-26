@@ -27,7 +27,7 @@ import sys
 
 
 
-DELETED_RE = re.compile(r'#\s*deleted:.*')
+DELETED_RE = re.compile(r'\s*deleted:.*')
 # takes the following regular expression pattern and turns it into a 
 # regular expression object. This is used to identify deleted files.
 

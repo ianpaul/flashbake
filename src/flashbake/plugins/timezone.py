@@ -81,7 +81,7 @@ def findtimezone(config):
         zone = config.timezone
         return zone
 
-    logging.warn('Could not get TZ from env var, /etc/timezone, or .flashbake.')
+    logging.warning('Could not get TZ from env var, /etc/timezone, or .flashbake.')
     zone = None
 
     return zone

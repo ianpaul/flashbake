@@ -32,6 +32,7 @@ import sys
 
 VERSION = flashbake.__version__
 pattern = '.flashbake'
+special_message = None
 
 
 def main():
@@ -251,7 +252,7 @@ def _load_plugin_dirs(options, home_dir):
             logging.debug(f'Adding plugin directory, {options.plugin_dir}.' )
             sys.path.insert(0, realpath(options.plugin_dir))
         else:
-            logging.warn(f'Plugin directory, {options.plugin_dir}, doesn\'t exist.')
+            logging.warning(f'Plugin directory, {options.plugin_dir}, doesn\'t exist.')
 
 
 
